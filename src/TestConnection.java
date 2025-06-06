@@ -14,7 +14,7 @@ public class TestConnection {
             Connection connection = dbConnection.getConnection();
             
             if (connection != null) {
-                System.out.println("✅ Conexión exitosa!");
+                System.out.println("Conexión exitosa!");
                 
                 // Probar una consulta simple
                 Statement statement = connection.createStatement();
@@ -22,12 +22,12 @@ public class TestConnection {
                 
                 if (resultSet.next()) {
                     int totalUsuarios = resultSet.getInt("total");
-                    System.out.println("✅ Consulta exitosa!");
-                    System.out.println("📊 Total de usuarios en la BD: " + totalUsuarios);
+                    System.out.println("Consulta exitosa!");
+                    System.out.println("Total de usuarios en la BD: " + totalUsuarios);
                 }
                 
                 // Probar listar roles
-                System.out.println("\n📋 Roles disponibles:");
+                System.out.println("\nRoles disponibles:");
                 ResultSet rolesResult = statement.executeQuery("SELECT id, nombre FROM roles");
                 while (rolesResult.next()) {
                     System.out.println("   - ID: " + rolesResult.getInt("id") + 
@@ -39,14 +39,14 @@ public class TestConnection {
                 rolesResult.close();
                 statement.close();
                 
-                System.out.println("\n✅ Prueba completada exitosamente!");
+                System.out.println("\nPrueba completada exitosamente!");
                 
             } else {
-                System.out.println("❌ Error: No se pudo establecer la conexión");
+                System.out.println("Error: No se pudo establecer la conexión");
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error durante la prueba: " + e.getMessage());
+            System.out.println("Error durante la prueba: " + e.getMessage());
             e.printStackTrace();
         }
     }

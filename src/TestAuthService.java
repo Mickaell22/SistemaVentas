@@ -107,11 +107,11 @@ public class TestAuthService {
         System.out.println("   Usuario duplicado creado: " + usuarioDuplicadoCreado);
         
         // 9. Logout final
-        System.out.println("\n9. 🔚 Logout final:");
+        System.out.println("\n9. Logout final:");
         authService.logout();
         System.out.println("   Autenticado: " + authService.isAuthenticated());
         System.out.println("   Sesión: " + sessionManager.getSessionInfo());
         
-        System.out.println("\n✅ Pruebas del sistema de autenticación completadas!");
+        System.out.println("\nPruebas del sistema de autenticación completadas!");
     }
 }

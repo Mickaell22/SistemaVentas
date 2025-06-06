@@ -12,23 +12,23 @@ public class TestCompleteSystem {
         
         try {
             // 1. Verificar conexión a BD
-            System.out.println("1. 🔗 Verificando conexión a base de datos...");
+            System.out.println("1. Verificando conexión a base de datos...");
             DatabaseConnection.getInstance();
-            System.out.println("   ✅ Conexión establecida\n");
+            System.out.println("Conexión establecida\n");
             
             // 2. Verificar que existe usuario admin
-            System.out.println("2. 👤 Verificando usuario administrador...");
+            System.out.println("2. Verificando usuario administrador...");
             UsuarioDAOImpl usuarioDAO = new UsuarioDAOImpl();
             
             if (!usuarioDAO.existeUsername("admin")) {
-                System.out.println("   ⚠️  Usuario admin no encontrado, creando...");
+                System.out.println("   Usuario admin no encontrado, creando...");
                 crearUsuarioAdmin();
             } else {
-                System.out.println("   ✅ Usuario admin existe");
+                System.out.println("   Usuario admin existe");
             }
             
             // 3. Actualizar contraseña admin para testing
-            System.out.println("\n3. 🔐 Actualizando contraseña de admin para testing...");
+            System.out.println("\n3. Actualizando contraseña de admin para testing...");
             String hashedPassword = PasswordUtils.hashPassword("admin123");
             
             // Actualizar directamente en BD
@@ -41,14 +41,14 @@ public class TestCompleteSystem {
             conn.commit();
             stmt.close();
             
-            System.out.println("   ✅ Contraseña actualizada (filas afectadas: " + updated + ")");
+            System.out.println("   Contraseña actualizada (filas afectadas: " + updated + ")");
             
             // 4. Probar autenticación
-            System.out.println("\n4. 🔐 Probando autenticación...");
+            System.out.println("\n4. Probando autenticación...");
             AuthService authService = AuthService.getInstance();
             
             boolean loginResult = authService.login("admin", "admin123");
-            System.out.println("   Login admin/admin123: " + (loginResult ? "✅ EXITOSO" : "❌ FALLÓ"));
+            System.out.println("   Login admin/admin123: " + (loginResult ? "EXITOSO" : "FALLÓ"));
             
             if (loginResult) {
                 Usuario currentUser = authService.getCurrentUser();
@@ -62,7 +62,7 @@ public class TestCompleteSystem {
             }
             
             // 5. Crear usuario de prueba
-            System.out.println("\n5. 👥 Creando usuario de prueba...");
+            System.out.println("\n5. Creando usuario de prueba...");
             UsuarioService usuarioService = UsuarioService.getInstance();
             
             Usuario usuarioPrueba = new Usuario(
@@ -71,15 +71,15 @@ public class TestCompleteSystem {
             );
             
             boolean usuarioCreado = usuarioService.crearUsuario(usuarioPrueba);
-            System.out.println("   Usuario de prueba creado: " + (usuarioCreado ? "✅ SÍ" : "❌ NO"));
+            System.out.println("   Usuario de prueba creado: " + (usuarioCreado ? "SÍ" : "NO"));
             
             // 6. Probar login con usuario de prueba
             if (usuarioCreado) {
-                System.out.println("\n6. 🔄 Probando login con usuario de prueba...");
+                System.out.println("\n6. Probando login con usuario de prueba...");
                 authService.logout();
                 
                 boolean loginPrueba = authService.login("prueba", "Prueba123");
-                System.out.println("   Login prueba/Prueba123: " + (loginPrueba ? "✅ EXITOSO" : "❌ FALLÓ"));
+                System.out.println("   Login prueba/Prueba123: " + (loginPrueba ? "EXITOSO" : "FALLÓ"));
                 
                 if (loginPrueba) {
                     Usuario userPrueba = authService.getCurrentUser();
@@ -91,17 +91,17 @@ public class TestCompleteSystem {
             
             // 7. Resumen final
             System.out.println("\n" + "=".repeat(50));
-            System.out.println("✅ SISTEMA LISTO PARA USAR");
+            System.out.println("SISTEMA LISTO PARA USAR");
             System.out.println("=".repeat(50));
-            System.out.println("📋 Credenciales disponibles:");
-            System.out.println("   👑 Admin: admin / admin123");
+            System.out.println("Credenciales disponibles:");
+            System.out.println("   Admin: admin / admin123");
             if (usuarioCreado) {
-                System.out.println("   👤 Prueba: prueba / Prueba123");
+                System.out.println("   Prueba: prueba / Prueba123");
             }
-            System.out.println("\n🚀 Ejecute Main.java para iniciar la aplicación");
+            System.out.println("\nEjecute Main.java para iniciar la aplicación");
             
         } catch (Exception e) {
-            System.err.println("❌ Error durante la prueba: " + e.getMessage());
+            System.err.println("Error durante la prueba: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -125,10 +125,10 @@ public class TestCompleteSystem {
             conn.commit();
             stmt.close();
             
-            System.out.println("   ✅ Usuario admin creado (filas insertadas: " + inserted + ")");
+            System.out.println("   Usuario admin creado (filas insertadas: " + inserted + ")");
             
         } catch (Exception e) {
-            System.err.println("   ❌ Error creando usuario admin: " + e.getMessage());
+            System.err.println("   Error creando usuario admin: " + e.getMessage());
         }
     }
 }

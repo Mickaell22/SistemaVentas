@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestCompleteSystem",
+            "request": "launch",
+            "mainClass": "TestCompleteSystem",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
             "name": "FixPasswordIssue",
             "request": "launch",
             "mainClass": "FixPasswordIssue",

@@ -32,16 +32,16 @@ public class Main {
         // Probar conexión a la base de datos
         try {
             DatabaseConnection.getInstance();
-            System.out.println("✅ Conexión a base de datos establecida");
+            System.out.println("Conexión a base de datos establecida");
             
             // Iniciar la aplicación en el hilo de eventos de Swing
             SwingUtilities.invokeLater(() -> {
-                System.out.println("🚀 Iniciando interfaz gráfica...");
+                System.out.println("Iniciando interfaz gráfica...");
                 new LoginController();
             });
             
         } catch (Exception e) {
-            System.err.println("❌ Error al iniciar el sistema: " + e.getMessage());
+            System.err.println("Error al iniciar el sistema: " + e.getMessage());
             
             // Mostrar error en ventana si es posible
             SwingUtilities.invokeLater(() -> {

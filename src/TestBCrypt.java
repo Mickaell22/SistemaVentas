@@ -29,7 +29,7 @@ public class TestBCrypt {
         testPasswordValidation("Admin123", true);
         
         // Probar modelo Usuario
-        System.out.println("\n👤 Prueba del modelo Usuario:");
+        System.out.println("\nPrueba del modelo Usuario:");
         Usuario usuario = new Usuario();
         usuario.setNombre("Juan");
         usuario.setApellido("Pérez");
@@ -51,7 +51,7 @@ public class TestBCrypt {
     
     private static void testPasswordValidation(String password, boolean expected) {
         boolean result = PasswordUtils.isValidPassword(password);
-        String status = result == expected ? "✅" : "❌";
+        String status = result == expected ? "Ok" : "ERROR";
         System.out.println(String.format("%s '%s' -> %s (esperado: %s)", 
                           status, password, result, expected));
     }
