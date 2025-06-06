@@ -1,3 +1,5 @@
+// MainFrame.java - Ubicación: src/views/main/MainFrame.java
+
 package views.main;
 
 import services.AuthService;
@@ -310,17 +312,17 @@ public class MainFrame extends JFrame {
                 java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
     }
     
-    // Métodos de acción (placeholders por ahora)
+    // Métodos de acción actualizados
     private void openVentas() {
         JOptionPane.showMessageDialog(this, "Módulo de Ventas - Próximamente", "Info", JOptionPane.INFORMATION_MESSAGE);
     }
     
     private void openInventario() {
-        JOptionPane.showMessageDialog(this, "Módulo de Inventario - Próximamente", "Info", JOptionPane.INFORMATION_MESSAGE);
+        cambiarPanel(new views.productos.ProductoPanel(), "Gestión de Inventario");
     }
     
     private void openProductos() {
-        JOptionPane.showMessageDialog(this, "Módulo de Productos - Próximamente", "Info", JOptionPane.INFORMATION_MESSAGE);
+        cambiarPanel(new views.productos.ProductoPanel(), "Gestión de Productos");
     }
     
     private void openUsuarios() {
@@ -337,6 +339,17 @@ public class MainFrame extends JFrame {
     
     private void openHistorialVentas() {
         JOptionPane.showMessageDialog(this, "Historial de Ventas - Próximamente", "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    // Método para cambiar el panel central
+    private void cambiarPanel(JPanel nuevoPanel, String titulo) {
+        contentPanel.removeAll();
+        contentPanel.add(nuevoPanel, BorderLayout.CENTER);
+        contentPanel.revalidate();
+        contentPanel.repaint();
+        
+        // Actualizar título de la ventana
+        setTitle("Sistema de Ventas - " + titulo + " - " + authService.getCurrentUser().getRolNombre());
     }
     
     private void logout() {
@@ -371,7 +384,7 @@ public class MainFrame extends JFrame {
     }
     
     private void showAbout() {
-        String message = "Sistema de Ventas v1.0\n\n" +
+        String message = "Sistema de Ventas v1.2\n\n" +
                         "Proyecto de Calidad de Software\n" +
                         "Desarrollado con Java Swing\n\n" +
                         "Características:\n" +

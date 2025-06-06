@@ -1,3 +1,4 @@
+package Test;
 import config.DatabaseConnection;
 import services.AuthService;
 import services.UsuarioService;

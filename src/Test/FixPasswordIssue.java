@@ -1,3 +1,4 @@
+package Test;
 import config.DatabaseConnection;
 import utils.PasswordUtils;
 import java.sql.*;

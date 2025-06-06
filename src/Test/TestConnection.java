@@ -1,3 +1,4 @@
+package Test;
 import config.DatabaseConnection;
 import java.sql.Connection;
 import java.sql.ResultSet;
