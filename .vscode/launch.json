@@ -3,6 +3,55 @@
     "configurations": [
         {
             "type": "java",
+            "name": "FixPasswordIssue",
+            "request": "launch",
+            "mainClass": "FixPasswordIssue",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestBCryptLibrary",
+            "request": "launch",
+            "mainClass": "TestBCryptLibrary",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestAuthService",
+            "request": "launch",
+            "mainClass": "TestAuthService",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestUsuarioDAO",
+            "request": "launch",
+            "mainClass": "TestUsuarioDAO",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestBCrypt",
+            "request": "launch",
+            "mainClass": "TestBCrypt",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestConnection",
+            "request": "launch",
+            "mainClass": "TestConnection",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
             "name": "Launch Main",
             "request": "launch",
             "mainClass": "Main",
