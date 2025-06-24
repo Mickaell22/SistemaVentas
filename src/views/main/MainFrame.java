@@ -5,6 +5,7 @@ import models.Usuario;
 import utils.SessionManager;
 import controllers.LoginController;
 import views.clientes.ClientePanel;
+import views.productos.ProductoPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 
 public class MainFrame extends JFrame {
 
@@ -109,7 +109,8 @@ public class MainFrame extends JFrame {
 
         // Crear botones según permisos
         if (authService.canMakeSales()) {
-            panel.add(createQuickButton("Nueva Venta", "💰", this::openVentas));
+            panel.add(createQuickButton("Nueva Venta", "💰", this::openNuevaVenta));
+            panel.add(createQuickButton("Ventas", "📊", this::openVentas));
         }
 
         if (authService.canManageInventory()) {
@@ -121,11 +122,11 @@ public class MainFrame extends JFrame {
             panel.add(createQuickButton("Usuarios", "👥", this::openUsuarios));
         }
 
-        if (authService.canViewReports()) {
-            panel.add(createQuickButton("Reportes", "📊", this::openReportes));
-        }
-
         panel.add(createQuickButton("Clientes", "👤", this::openClientes));
+
+        if (authService.canViewReports()) {
+            panel.add(createQuickButton("Reportes", "📈", this::openReportes));
+        }
 
         return panel;
     }
@@ -173,12 +174,17 @@ public class MainFrame extends JFrame {
             JMenu menuVentas = new JMenu("Ventas");
 
             JMenuItem itemNuevaVenta = new JMenuItem("Nueva Venta");
-            itemNuevaVenta.addActionListener(e -> openVentas());
+            itemNuevaVenta.addActionListener(e -> openNuevaVenta());
+
+            JMenuItem itemGestionVentas = new JMenuItem("Gestión de Ventas");
+            itemGestionVentas.addActionListener(e -> openVentas());
 
             JMenuItem itemHistorialVentas = new JMenuItem("Historial de Ventas");
             itemHistorialVentas.addActionListener(e -> openHistorialVentas());
 
             menuVentas.add(itemNuevaVenta);
+            menuVentas.addSeparator();
+            menuVentas.add(itemGestionVentas);
             menuVentas.add(itemHistorialVentas);
             menuBar.add(menuVentas);
         }
@@ -190,13 +196,40 @@ public class MainFrame extends JFrame {
             JMenuItem itemProductos = new JMenuItem("Productos");
             itemProductos.addActionListener(e -> openProductos());
 
+            JMenuItem itemCategorias = new JMenuItem("Categorías");
+            itemCategorias.addActionListener(e -> openCategorias());
+
+            JMenuItem itemProveedores = new JMenuItem("Proveedores");
+            itemProveedores.addActionListener(e -> openProveedores());
+
             JMenuItem itemInventario = new JMenuItem("Control de Stock");
             itemInventario.addActionListener(e -> openInventario());
 
             menuInventario.add(itemProductos);
+            menuInventario.add(itemCategorias);
+            menuInventario.add(itemProveedores);
+            menuInventario.addSeparator();
             menuInventario.add(itemInventario);
             menuBar.add(menuInventario);
         }
+
+        // Menú Clientes
+        JMenu menuClientes = new JMenu("Clientes");
+        
+        JMenuItem itemGestionClientes = new JMenuItem("Gestión de Clientes");
+        itemGestionClientes.addActionListener(e -> openClientes());
+        
+        if (authService.canViewReports()) {
+            JMenuItem itemReportesClientes = new JMenuItem("Reportes de Clientes");
+            itemReportesClientes.addActionListener(e -> openReportesClientes());
+            menuClientes.add(itemGestionClientes);
+            menuClientes.addSeparator();
+            menuClientes.add(itemReportesClientes);
+        } else {
+            menuClientes.add(itemGestionClientes);
+        }
+        
+        menuBar.add(menuClientes);
 
         // Menú Administración
         if (authService.canManageUsers()) {
@@ -205,7 +238,16 @@ public class MainFrame extends JFrame {
             JMenuItem itemUsuarios = new JMenuItem("Usuarios");
             itemUsuarios.addActionListener(e -> openUsuarios());
 
+            JMenuItem itemRoles = new JMenuItem("Roles y Permisos");
+            itemRoles.addActionListener(e -> openRoles());
+
+            JMenuItem itemConfiguracion = new JMenuItem("Configuración");
+            itemConfiguracion.addActionListener(e -> openConfiguracion());
+
             menuAdmin.add(itemUsuarios);
+            menuAdmin.add(itemRoles);
+            menuAdmin.addSeparator();
+            menuAdmin.add(itemConfiguracion);
             menuBar.add(menuAdmin);
         }
 
@@ -214,16 +256,32 @@ public class MainFrame extends JFrame {
             JMenu menuReportes = new JMenu("Reportes");
 
             JMenuItem itemReportesVentas = new JMenuItem("Reportes de Ventas");
-            itemReportesVentas.addActionListener(e -> openReportes());
+            itemReportesVentas.addActionListener(e -> openReportesVentas());
+
+            JMenuItem itemReportesProductos = new JMenuItem("Reportes de Productos");
+            itemReportesProductos.addActionListener(e -> openReportesProductos());
+
+            JMenuItem itemEstadisticas = new JMenuItem("Estadísticas Generales");
+            itemEstadisticas.addActionListener(e -> openEstadisticas());
 
             menuReportes.add(itemReportesVentas);
+            menuReportes.add(itemReportesProductos);
+            menuReportes.addSeparator();
+            menuReportes.add(itemEstadisticas);
             menuBar.add(menuReportes);
         }
 
         // Menú Ayuda
         JMenu menuAyuda = new JMenu("Ayuda");
+        
+        JMenuItem itemManual = new JMenuItem("Manual de Usuario");
+        itemManual.addActionListener(e -> showManual());
+        
         JMenuItem itemAcerca = new JMenuItem("Acerca de...");
         itemAcerca.addActionListener(e -> showAbout());
+        
+        menuAyuda.add(itemManual);
+        menuAyuda.addSeparator();
         menuAyuda.add(itemAcerca);
 
         menuBar.add(menuArchivo);
@@ -238,18 +296,22 @@ public class MainFrame extends JFrame {
 
         // Botones de herramientas según permisos
         if (authService.canMakeSales()) {
-            addToolBarButton("Nueva Venta", "💰", this::openVentas);
+            addToolBarButton("Nueva Venta", "💰", this::openNuevaVenta);
+            addToolBarButton("Ventas", "📊", this::openVentas);
+            toolBar.addSeparator();
         }
 
         if (authService.canManageInventory()) {
             addToolBarButton("Productos", "🏷️", this::openProductos);
+            addToolBarButton("Inventario", "📦", this::openInventario);
+            toolBar.addSeparator();
         }
 
         addToolBarButton("Clientes", "👤", this::openClientes);
 
         if (authService.canViewReports()) {
             toolBar.addSeparator();
-            addToolBarButton("Reportes", "📊", this::openReportes);
+            addToolBarButton("Reportes", "📈", this::openReportes);
         }
 
         add(toolBar, BorderLayout.NORTH);
@@ -315,36 +377,151 @@ public class MainFrame extends JFrame {
                         java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
     }
 
-    // Métodos de acción actualizados
-    private void openVentas() {
-        JOptionPane.showMessageDialog(this, "Módulo de Ventas - Próximamente", "Info", JOptionPane.INFORMATION_MESSAGE);
+    // ===== MÉTODOS DE NAVEGACIÓN =====
+
+    // Módulo de Ventas (Próximamente)
+    private void openNuevaVenta() {
+        JOptionPane.showMessageDialog(this, 
+            "MÓDULO DE VENTAS\n\n" +
+            "El módulo de ventas está siendo implementado.\n" +
+            "Próximamente estará disponible con:\n\n" +
+            "• Carrito de compras inteligente\n" +
+            "• Cálculo automático de IVA y descuentos\n" +
+            "• Gestión de stock en tiempo real\n" +
+            "• Facturación automática\n" +
+            "• Múltiples métodos de pago", 
+            "Nueva Venta - Próximamente", 
+            JOptionPane.INFORMATION_MESSAGE);
     }
 
+    private void openVentas() {
+        JOptionPane.showMessageDialog(this, 
+            "GESTIÓN DE VENTAS\n\n" +
+            "Funcionalidades pendientes:\n\n" +
+            "• Ver historial de ventas\n" +
+            "• Editar ventas pendientes\n" +
+            "• Completar y cancelar ventas\n" +
+            "• Búsquedas y filtros avanzados\n" +
+            "• Estadísticas de ventas", 
+            "Gestión de Ventas - Próximamente", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void openHistorialVentas() {
+        JOptionPane.showMessageDialog(this, 
+            "HISTORIAL DE VENTAS\n\n" +
+            "Próximamente podrás:\n\n" +
+            "• Consultar todas las ventas realizadas\n" +
+            "• Filtrar por fechas, clientes y estados\n" +
+            "• Ver detalles completos de cada venta\n" +
+            "• Generar reportes de ventas\n" +
+            "• Imprimir facturas", 
+            "Historial de Ventas - Próximamente", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // Módulo de Inventario
     private void openInventario() {
-        cambiarPanel(new views.productos.ProductoPanel(), "Gestión de Inventario");
+        cambiarPanel(new ProductoPanel(), "Control de Inventario");
     }
 
     private void openProductos() {
-        cambiarPanel(new views.productos.ProductoPanel(), "Gestión de Productos");
+        cambiarPanel(new ProductoPanel(), "Gestión de Productos");
     }
 
+    private void openCategorias() {
+        JOptionPane.showMessageDialog(this, "Módulo de Categorías - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void openProveedores() {
+        JOptionPane.showMessageDialog(this, "Módulo de Proveedores - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // Módulo de Clientes
+    private void openClientes() {
+        cambiarPanel(new ClientePanel(), "Gestión de Clientes");
+    }
+
+    // Módulo de Usuarios
     private void openUsuarios() {
         JOptionPane.showMessageDialog(this, "Módulo de Usuarios - Próximamente", "Info",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void openClientes() {
-        cambiarPanel(new views.clientes.ClientePanel(), "Gestión de Clientes");
+    private void openRoles() {
+        JOptionPane.showMessageDialog(this, "Módulo de Roles - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
+    private void openConfiguracion() {
+        JOptionPane.showMessageDialog(this, "Módulo de Configuración - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // Módulo de Reportes
     private void openReportes() {
-        JOptionPane.showMessageDialog(this, "Módulo de Reportes - Próximamente", "Info",
+        JOptionPane.showMessageDialog(this, "Módulo de Reportes Generales - Próximamente", "Info",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void openHistorialVentas() {
-        JOptionPane.showMessageDialog(this, "Historial de Ventas - Próximamente", "Info",
+    private void openReportesVentas() {
+        JOptionPane.showMessageDialog(this, "Reportes de Ventas - Próximamente", "Info",
                 JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void openReportesProductos() {
+        JOptionPane.showMessageDialog(this, "Reportes de Productos - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void openReportesClientes() {
+        JOptionPane.showMessageDialog(this, "Reportes de Clientes - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void openEstadisticas() {
+        JOptionPane.showMessageDialog(this, "Estadísticas Generales - Próximamente", "Info",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // Ayuda
+    private void showManual() {
+        String mensaje = "MANUAL DE USUARIO - SISTEMA DE VENTAS\n\n" +
+                "MÓDULOS DISPONIBLES:\n\n" +
+                "• PRODUCTOS E INVENTARIO:\n" +
+                "  - Gestión completa de productos\n" +
+                "  - Control de stock con alertas\n" +
+                "  - Categorías y proveedores\n" +
+                "  - Cálculo automático de márgenes\n\n" +
+                "• CLIENTES:\n" +
+                "  - Gestión completa de clientes\n" +
+                "  - Validaciones de documentos ecuatorianos\n" +
+                "  - Búsquedas y filtros avanzados\n\n" +
+                "• VENTAS (Próximamente):\n" +
+                "  - Carrito de compras inteligente\n" +
+                "  - Cálculo automático de IVA\n" +
+                "  - Gestión de facturas\n\n" +
+                "PERMISOS POR ROL:\n" +
+                "• Administrador: Acceso completo\n" +
+                "• Gerente: Gestión y reportes\n" +
+                "• Vendedor: Ventas e inventario\n" +
+                "• Cajero: Solo ventas\n\n" +
+                "ESTADO ACTUAL:\n" +
+                "✅ Autenticación y usuarios\n" +
+                "✅ Productos e inventario\n" +
+                "✅ Gestión de clientes\n" +
+                "🔄 Módulo de ventas (en desarrollo)";
+
+        JTextArea textArea = new JTextArea(mensaje);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(600, 500));
+        
+        JOptionPane.showMessageDialog(this, scrollPane, "Manual de Usuario", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // Método para cambiar el panel central
@@ -388,16 +565,42 @@ public class MainFrame extends JFrame {
     }
 
     private void showAbout() {
-        String message = "Sistema de Ventas v1.2\n\n" +
+        String message = "SISTEMA DE VENTAS v1.5\n\n" +
                 "Proyecto de Calidad de Software\n" +
                 "Desarrollado con Java Swing\n\n" +
-                "Características:\n" +
-                "• Gestión de Usuarios y Roles\n" +
-                "• Control de Inventario\n" +
-                "• Sistema de Ventas\n" +
-                "• Reportes en PDF\n" +
-                "• Auditoría y Seguridad";
+                "MÓDULOS IMPLEMENTADOS:\n" +
+                "✅ Sistema de Autenticación\n" +
+                "✅ Gestión de Usuarios y Roles\n" +
+                "✅ Módulo de Productos e Inventario\n" +
+                "✅ Módulo de Clientes\n" +
+                "🔄 Módulo de Ventas (en desarrollo)\n\n" +
+                "CARACTERÍSTICAS ACTUALES:\n" +
+                "• Interfaz gráfica moderna\n" +
+                "• Sistema de permisos dinámico\n" +
+                "• Validaciones robustas\n" +
+                "• Gestión de stock con alertas\n" +
+                "• Búsquedas y filtros avanzados\n" +
+                "• Auditoría y seguridad\n\n" +
+                "PRÓXIMAS CARACTERÍSTICAS:\n" +
+                "• Carrito de compras inteligente\n" +
+                "• Cálculos automáticos (IVA, descuentos)\n" +
+                "• Facturación automática\n" +
+                "• Reportes avanzados\n\n" +
+                "TECNOLOGÍAS:\n" +
+                "• Java 11+ con Swing\n" +
+                "• MySQL con XAMPP\n" +
+                "• Patrón MVC\n" +
+                "• BCrypt para seguridad\n\n" +
+                "Estado: PARCIALMENTE FUNCIONAL\n" +
+                "Versión estable lista para uso";
 
-        JOptionPane.showMessageDialog(this, message, "Acerca del Sistema", JOptionPane.INFORMATION_MESSAGE);
+        JTextArea textArea = new JTextArea(message);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Arial", Font.PLAIN, 12));
+        
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(500, 600));
+        
+        JOptionPane.showMessageDialog(this, scrollPane, "Acerca del Sistema", JOptionPane.INFORMATION_MESSAGE);
     }
 }
