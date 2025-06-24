@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestClienteComplete",
+            "request": "launch",
+            "mainClass": "Test.TestClienteComplete",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
             "name": "TestConstructorsFix",
             "request": "launch",
             "mainClass": "TestConstructorsFix",
