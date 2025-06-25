@@ -80,53 +80,133 @@ public class Venta {
     
     // Getters y Setters
     
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getId() { 
+        return id; 
+    }
     
-    public String getNumeroFactura() { return numeroFactura; }
-    public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }
+    public void setId(int id) { 
+        this.id = id; 
+    }
     
-    public int getClienteId() { return clienteId; }
-    public void setClienteId(int clienteId) { this.clienteId = clienteId; }
+    public String getNumeroFactura() { 
+        return numeroFactura; 
+    }
     
-    public String getClienteNombre() { return clienteNombre; }
-    public void setClienteNombre(String clienteNombre) { this.clienteNombre = clienteNombre; }
+    public void setNumeroFactura(String numeroFactura) { 
+        this.numeroFactura = numeroFactura; 
+    }
     
-    public String getClienteDocumento() { return clienteDocumento; }
-    public void setClienteDocumento(String clienteDocumento) { this.clienteDocumento = clienteDocumento; }
+    public int getClienteId() { 
+        return clienteId; 
+    }
     
-    public int getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(int usuarioId) { this.usuarioId = usuarioId; }
+    public void setClienteId(int clienteId) { 
+        this.clienteId = clienteId; 
+    }
     
-    public String getUsuarioNombre() { return usuarioNombre; }
-    public void setUsuarioNombre(String usuarioNombre) { this.usuarioNombre = usuarioNombre; }
+    public String getClienteNombre() { 
+        return clienteNombre; 
+    }
     
-    public LocalDateTime getFechaVenta() { return fechaVenta; }
-    public void setFechaVenta(LocalDateTime fechaVenta) { this.fechaVenta = fechaVenta; }
+    public void setClienteNombre(String clienteNombre) { 
+        this.clienteNombre = clienteNombre; 
+    }
     
-    public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+    public String getClienteDocumento() { 
+        return clienteDocumento; 
+    }
     
-    public BigDecimal getDescuento() { return descuento; }
-    public void setDescuento(BigDecimal descuento) { this.descuento = descuento; }
+    public void setClienteDocumento(String clienteDocumento) { 
+        this.clienteDocumento = clienteDocumento; 
+    }
     
-    public BigDecimal getImpuestos() { return impuestos; }
-    public void setImpuestos(BigDecimal impuestos) { this.impuestos = impuestos; }
+    public int getUsuarioId() { 
+        return usuarioId; 
+    }
     
-    public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
+    public void setUsuarioId(int usuarioId) { 
+        this.usuarioId = usuarioId; 
+    }
     
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
+    public String getUsuarioNombre() { 
+        return usuarioNombre; 
+    }
     
-    public String getMetodoPago() { return metodoPago; }
-    public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
+    public void setUsuarioNombre(String usuarioNombre) { 
+        this.usuarioNombre = usuarioNombre; 
+    }
     
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public LocalDateTime getFechaVenta() { 
+        return fechaVenta; 
+    }
     
-    public List<DetalleVenta> getDetalles() { return detalles; }
-    public void setDetalles(List<DetalleVenta> detalles) { this.detalles = detalles; }
+    public void setFechaVenta(LocalDateTime fechaVenta) { 
+        this.fechaVenta = fechaVenta; 
+    }
+    
+    public BigDecimal getSubtotal() { 
+        return subtotal; 
+    }
+    
+    public void setSubtotal(BigDecimal subtotal) { 
+        this.subtotal = subtotal; 
+    }
+    
+    public BigDecimal getDescuento() { 
+        return descuento; 
+    }
+    
+    public void setDescuento(BigDecimal descuento) { 
+        this.descuento = descuento; 
+    }
+    
+    public BigDecimal getImpuestos() { 
+        return impuestos; 
+    }
+    
+    public void setImpuestos(BigDecimal impuestos) { 
+        this.impuestos = impuestos; 
+    }
+    
+    public BigDecimal getTotal() { 
+        return total; 
+    }
+    
+    public void setTotal(BigDecimal total) { 
+        this.total = total; 
+    }
+    
+    public String getEstado() { 
+        return estado; 
+    }
+    
+    public void setEstado(String estado) { 
+        this.estado = estado; 
+    }
+    
+    public String getMetodoPago() { 
+        return metodoPago; 
+    }
+    
+    public void setMetodoPago(String metodoPago) { 
+        this.metodoPago = metodoPago; 
+    }
+    
+    public String getObservaciones() { 
+        return observaciones; 
+    }
+    
+    public void setObservaciones(String observaciones) { 
+        this.observaciones = observaciones; 
+    }
+    
+    public List<DetalleVenta> getDetalles() { 
+        return detalles; 
+    }
+    
+    public void setDetalles(List<DetalleVenta> detalles) { 
+        this.detalles = detalles; 
+    }
     
     // Métodos de utilidad
     
@@ -157,13 +237,18 @@ public class Venta {
         BigDecimal nuevoSubtotal = BigDecimal.ZERO;
         
         for (DetalleVenta detalle : detalles) {
-            nuevoSubtotal = nuevoSubtotal.add(detalle.getSubtotal());
+            if (detalle.getSubtotal() != null) {
+                nuevoSubtotal = nuevoSubtotal.add(detalle.getSubtotal());
+            }
         }
         
         this.subtotal = nuevoSubtotal;
         
         // Calcular total = subtotal - descuento + impuestos
-        this.total = this.subtotal.subtract(this.descuento).add(this.impuestos);
+        BigDecimal descuentoActual = this.descuento != null ? this.descuento : BigDecimal.ZERO;
+        BigDecimal impuestosActuales = this.impuestos != null ? this.impuestos : BigDecimal.ZERO;
+        
+        this.total = this.subtotal.subtract(descuentoActual).add(impuestosActuales);
     }
     
     /**
@@ -205,7 +290,9 @@ public class Venta {
      * Obtiene el estado formateado para mostrar
      */
     public String getEstadoFormateado() {
-        switch (estado) {
+        if (estado == null) return "Desconocido";
+        
+        switch (estado.toUpperCase()) {
             case "COMPLETADA": return "Completada";
             case "PENDIENTE": return "Pendiente";
             case "CANCELADA": return "Cancelada";
@@ -217,10 +304,15 @@ public class Venta {
      * Obtiene el método de pago formateado
      */
     public String getMetodoPagoFormateado() {
-        switch (metodoPago) {
+        if (metodoPago == null) return "Efectivo";
+        
+        switch (metodoPago.toUpperCase()) {
             case "EFECTIVO": return "Efectivo";
+            case "TARJETA_CREDITO": return "Tarjeta de Crédito";
+            case "TARJETA_DEBITO": return "Tarjeta de Débito";
             case "TARJETA": return "Tarjeta";
             case "TRANSFERENCIA": return "Transferencia";
+            case "CHEQUE": return "Cheque";
             default: return metodoPago;
         }
     }
@@ -247,14 +339,14 @@ public class Venta {
         return String.format("Factura %s - %s - Total: $%.2f", 
                            numeroFactura != null ? numeroFactura : "N/A",
                            getClienteInfo(),
-                           total);
+                           total != null ? total : BigDecimal.ZERO);
     }
     
     /**
      * Calcula el porcentaje de descuento aplicado
      */
     public double getPorcentajeDescuento() {
-        if (subtotal.compareTo(BigDecimal.ZERO) > 0) {
+        if (subtotal != null && subtotal.compareTo(BigDecimal.ZERO) > 0 && descuento != null) {
             return descuento.divide(subtotal, 4, BigDecimal.ROUND_HALF_UP)
                            .multiply(new BigDecimal(100)).doubleValue();
         }
@@ -279,13 +371,46 @@ public class Venta {
      * Obtiene el total neto (subtotal - descuento, sin impuestos)
      */
     public BigDecimal getTotalNeto() {
-        return subtotal.subtract(descuento);
+        BigDecimal subtotalActual = subtotal != null ? subtotal : BigDecimal.ZERO;
+        BigDecimal descuentoActual = descuento != null ? descuento : BigDecimal.ZERO;
+        return subtotalActual.subtract(descuentoActual);
+    }
+    
+    /**
+     * Verifica si la venta tiene productos
+     */
+    public boolean tieneProductos() {
+        return detalles != null && !detalles.isEmpty();
+    }
+    
+    /**
+     * Verifica si la venta es válida para guardar
+     */
+    public boolean isValidaParaGuardar() {
+        return clienteId > 0 && 
+               numeroFactura != null && !numeroFactura.trim().isEmpty() &&
+               tieneProductos();
+    }
+    
+    /**
+     * Obtiene el valor promedio por producto
+     */
+    public BigDecimal getValorPromedioPorProducto() {
+        if (detalles.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal totalProductos = new BigDecimal(getCantidadTotalProductos());
+        BigDecimal totalVenta = total != null ? total : BigDecimal.ZERO;
+        
+        return totalVenta.divide(totalProductos, 2, BigDecimal.ROUND_HALF_UP);
     }
     
     @Override
     public String toString() {
         return String.format("Venta{id=%d, numeroFactura='%s', cliente='%s', total=%.2f, estado='%s'}", 
-                           id, numeroFactura, getClienteInfo(), total, estado);
+                           id, numeroFactura, getClienteInfo(), 
+                           total != null ? total : BigDecimal.ZERO, estado);
     }
     
     @Override
