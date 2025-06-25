@@ -1,6 +1,9 @@
 package models;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+
 
 public class DetalleVenta {
     
@@ -171,7 +174,7 @@ public class DetalleVenta {
     public double getPorcentajeDescuento() {
         BigDecimal precioTotal = getPrecioTotal();
         if (precioTotal.compareTo(BigDecimal.ZERO) > 0 && tieneDescuento()) {
-            return descuento.divide(precioTotal, 4, BigDecimal.ROUND_HALF_UP)
+            return descuento.divide(precioTotal, 4, RoundingMode.HALF_UP)
                            .multiply(new BigDecimal(100)).doubleValue();
         }
         return 0.0;
@@ -182,7 +185,7 @@ public class DetalleVenta {
      */
     public BigDecimal getDescuentoUnitario() {
         if (cantidad > 0 && tieneDescuento()) {
-            return descuento.divide(new BigDecimal(cantidad), 2, BigDecimal.ROUND_HALF_UP);
+            return descuento.divide(new BigDecimal(cantidad), 2, RoundingMode.HALF_UP);
         }
         return BigDecimal.ZERO;
     }
@@ -303,7 +306,7 @@ public class DetalleVenta {
         if (porcentaje >= 0 && porcentaje <= 100) {
             BigDecimal descuentoCalculado = getPrecioTotal()
                 .multiply(new BigDecimal(porcentaje))
-                .divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP);
+                .divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
             setDescuento(descuentoCalculado);
         }
     }

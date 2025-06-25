@@ -12,8 +12,10 @@ import models.Cliente;
 import models.Producto;
 
 import javax.swing.*;
+import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
@@ -126,8 +128,6 @@ public class VentaController {
         try {
             Optional<Producto> productoOpt = productoService.obtenerProductoPorCodigo(codigoProducto);
             if (!productoOpt.isPresent()) {
-                // CAMBIO: No mostrar error automáticamente, solo retornar false
-                // showError("Producto no encontrado: " + codigoProducto);
                 return false;
             }
 
@@ -155,7 +155,6 @@ public class VentaController {
                     detalle.calcularSubtotal();
                     actualizarTotalesCarrito();
 
-                    // CAMBIO: Mostrar mensaje de éxito
                     showInfo("Cantidad actualizada para: " + producto.getNombre());
                     return true;
                 }
@@ -173,7 +172,6 @@ public class VentaController {
             carritoTemporal.add(detalle);
             actualizarTotalesCarrito();
 
-            // CAMBIO: Mostrar mensaje de éxito
             showInfo("Producto agregado: " + producto.getNombre());
             return true;
 
@@ -348,10 +346,8 @@ public class VentaController {
                 return false;
             }
 
-            // CAMBIO: Validación mejorada del cliente
             boolean tieneCliente = false;
 
-            // Verificar si hay cliente seleccionado en ventaActual
             if (ventaActual != null && ventaActual.getClienteId() > 0) {
                 venta.setClienteId(ventaActual.getClienteId());
                 venta.setClienteNombre(ventaActual.getClienteNombre());
@@ -359,7 +355,6 @@ public class VentaController {
                 tieneCliente = true;
             }
 
-            // Verificar si los datos del cliente están en el objeto venta
             if (!tieneCliente && venta.getClienteId() > 0) {
                 tieneCliente = true;
             }
@@ -369,7 +364,6 @@ public class VentaController {
                 return false;
             }
 
-            // CAMBIO: Asegurar que la venta tenga todos los datos necesarios
             if (venta.getUsuarioId() <= 0 && ventaActual != null) {
                 venta.setUsuarioId(ventaActual.getUsuarioId());
             }
@@ -387,10 +381,8 @@ public class VentaController {
                         ventaActual != null ? ventaActual.getNumeroFactura() : generarNumeroFacturaSimple());
             }
 
-            // Asegurar que los detalles están actualizados
             venta.setDetalles(new ArrayList<>(carritoTemporal));
 
-            // CAMBIO: Recalcular totales antes de guardar
             BigDecimal subtotal = BigDecimal.ZERO;
             for (DetalleVenta detalle : carritoTemporal) {
                 detalle.calcularSubtotal();
@@ -411,13 +403,13 @@ public class VentaController {
                     if (resultado) {
                         showInfo("Venta creada exitosamente: " + venta.getNumeroFactura());
                         limpiarCarrito();
-                        cargarDatos(); // Recargar datos
+                        cargarDatos();
                     }
                 } else {
                     resultado = ventaService.actualizarVenta(venta);
                     if (resultado) {
                         showInfo("Venta actualizada exitosamente: " + venta.getNumeroFactura());
-                        cargarDatos(); // Recargar datos
+                        cargarDatos();
                     }
                 }
 
@@ -514,6 +506,187 @@ public class VentaController {
         }
     }
 
+    // ===== GESTIÓN DE ESTADOS DE VENTA =====
+
+    /**
+     * Completa una venta (cambia estado de PENDIENTE a COMPLETADA)
+     */
+    public boolean completarVenta(int ventaId) {
+        try {
+            if (!authService.canMakeSales()) {
+                showError("No tiene permisos para completar ventas");
+                return false;
+            }
+
+            Optional<Venta> ventaOpt = ventaService.obtenerVentaPorId(ventaId);
+            if (!ventaOpt.isPresent()) {
+                showError("Venta no encontrada");
+                return false;
+            }
+
+            Venta venta = ventaOpt.get();
+
+            if (!ventaService.sePuedeCompletar(venta)) {
+                if ("COMPLETADA".equals(venta.getEstado())) {
+                    showError("La venta ya está completada");
+                } else if ("CANCELADA".equals(venta.getEstado())) {
+                    showError("No se puede completar una venta cancelada");
+                } else if (!venta.tieneProductos()) {
+                    showError("La venta no tiene productos");
+                } else {
+                    showError("La venta no se puede completar en su estado actual");
+                }
+                return false;
+            }
+
+            boolean resultado = ventaService.completarVenta(ventaId);
+
+            if (resultado) {
+                showInfo("Venta completada exitosamente\nFactura: " + venta.getNumeroFactura());
+                cargarDatos();
+                return true;
+            } else {
+                showError("Error al completar la venta. Verifique el stock disponible.");
+                return false;
+            }
+
+        } catch (Exception e) {
+            showError("Error inesperado al completar venta: " + e.getMessage());
+            System.err.println("Error en completarVenta(): " + e.toString());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Cancela una venta
+     */
+    public boolean cancelarVenta(int ventaId) {
+        try {
+            if (!authService.canMakeSales()) {
+                showError("No tiene permisos para cancelar ventas");
+                return false;
+            }
+
+            Optional<Venta> ventaOpt = ventaService.obtenerVentaPorId(ventaId);
+            if (!ventaOpt.isPresent()) {
+                showError("Venta no encontrada");
+                return false;
+            }
+
+            Venta venta = ventaOpt.get();
+
+            if (!ventaService.sePuedeCancelar(venta)) {
+                if ("CANCELADA".equals(venta.getEstado())) {
+                    showError("La venta ya está cancelada");
+                } else {
+                    showError("La venta no se puede cancelar");
+                }
+                return false;
+            }
+
+            boolean resultado = ventaService.cancelarVenta(ventaId);
+
+            if (resultado) {
+                showInfo("Venta cancelada exitosamente\nFactura: " + venta.getNumeroFactura());
+                cargarDatos();
+                return true;
+            } else {
+                showError("Error al cancelar la venta");
+                return false;
+            }
+
+        } catch (Exception e) {
+            showError("Error inesperado al cancelar venta: " + e.getMessage());
+            System.err.println("Error en cancelarVenta(): " + e.toString());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Verifica si una venta se puede completar
+     */
+    public boolean sePuedeCompletar(int ventaId) {
+        try {
+            Optional<Venta> ventaOpt = ventaService.obtenerVentaPorId(ventaId);
+            if (!ventaOpt.isPresent()) {
+                return false;
+            }
+            return ventaService.sePuedeCompletar(ventaOpt.get());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Verifica si una venta se puede cancelar
+     */
+    public boolean sePuedeCancelar(int ventaId) {
+        try {
+            Optional<Venta> ventaOpt = ventaService.obtenerVentaPorId(ventaId);
+            if (!ventaOpt.isPresent()) {
+                return false;
+            }
+            return ventaService.sePuedeCancelar(ventaOpt.get());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ===== MÉTODOS DE CONSULTA =====
+
+    public Optional<Venta> obtenerVentaPorId(int ventaId) {
+        try {
+            return ventaService.obtenerVentaPorId(ventaId);
+        } catch (Exception e) {
+            System.err.println("Error al obtener venta por ID: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public List<Venta> obtenerTodasLasVentas() {
+        try {
+            return ventaService.obtenerTodasLasVentas();
+        } catch (Exception e) {
+            System.err.println("Error al obtener todas las ventas: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    // ===== MÉTODOS DE FORMATEO =====
+
+    public String formatearMonto(BigDecimal monto) {
+        try {
+            if (monto == null) {
+                return "$0.00";
+            }
+            return String.format("$%.2f", monto);
+        } catch (Exception e) {
+            return "$0.00";
+        }
+    }
+
+    public String formatearFecha(LocalDateTime fecha) {
+        try {
+            return ventaService.formatearFecha(fecha);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String formatearFechaCorta(LocalDateTime fecha) {
+        try {
+            return ventaService.formatearFechaCorta(fecha);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String convertirEstadoADisplay(String estadoDB) {
+        return ventaService.convertirEstadoADisplay(estadoDB);
+    }
+
     // ===== UTILIDADES =====
 
     public String[] getMetodosPago() {
@@ -564,13 +737,6 @@ public class VentaController {
         return new String[] { "TODOS", "PENDIENTE", "COMPLETADA", "CANCELADA" };
     }
 
-    public String formatearMonto(BigDecimal monto) {
-        if (monto == null) {
-            return "$0.00";
-        }
-        return String.format("$%.2f", monto);
-    }
-
     public Venta getVentaActual() {
         return ventaActual;
     }
@@ -589,13 +755,13 @@ public class VentaController {
 
     // ===== MÉTODOS AUXILIARES =====
 
-    private void actualizarEstadisticas() {
+    public void actualizarEstadisticas() {
         if (ventaPanel != null) {
             try {
-                String estadisticas = "Ventas: 0 total | 0 pendientes | 0 completadas | Hoy: $0.00";
+                String estadisticas = ventaService.getEstadisticasVentas();
                 ventaPanel.actualizarEstadisticas(estadisticas);
             } catch (Exception e) {
-                showError("Error al actualizar estadísticas: " + e.getMessage());
+                System.err.println("Error al actualizar estadísticas: " + e.getMessage());
             }
         }
     }
@@ -640,18 +806,6 @@ public class VentaController {
                 showError("Error al obtener ventas pendientes: " + e.getMessage());
             }
         }
-    }
-
-    public void generarReporteVentas() {
-        showInfo("Funcionalidad de reportes será implementada en una próxima versión");
-    }
-
-    public void exportarVentasCSV() {
-        showInfo("Funcionalidad de exportación será implementada en una próxima versión");
-    }
-
-    public void imprimirFactura(int ventaId) {
-        showInfo("Funcionalidad de impresión será implementada en una próxima versión");
     }
 
     // ===== MENSAJES =====

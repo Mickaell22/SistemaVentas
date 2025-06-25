@@ -1,7 +1,9 @@
 package models;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.math.RoundingMode;
 
 public class Producto {
     
@@ -132,7 +134,7 @@ public class Producto {
     public double getPorcentajeMargen() {
         if (precioCompra != null && precioVenta != null && precioCompra.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal margen = getMargenGanancia();
-            return margen.divide(precioCompra, 4, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100)).doubleValue();
+            return margen.divide(precioCompra, 4, RoundingMode.HALF_UP).multiply(new BigDecimal(100)).doubleValue();
         }
         return 0.0;
     }

@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.math.RoundingMode;
+
+
 
 public class Venta {
     
@@ -347,7 +350,7 @@ public class Venta {
      */
     public double getPorcentajeDescuento() {
         if (subtotal != null && subtotal.compareTo(BigDecimal.ZERO) > 0 && descuento != null) {
-            return descuento.divide(subtotal, 4, BigDecimal.ROUND_HALF_UP)
+            return descuento.divide(subtotal, 4, RoundingMode.HALF_UP)
                            .multiply(new BigDecimal(100)).doubleValue();
         }
         return 0.0;
@@ -403,7 +406,7 @@ public class Venta {
         BigDecimal totalProductos = new BigDecimal(getCantidadTotalProductos());
         BigDecimal totalVenta = total != null ? total : BigDecimal.ZERO;
         
-        return totalVenta.divide(totalProductos, 2, BigDecimal.ROUND_HALF_UP);
+        return totalVenta.divide(totalProductos, 2, RoundingMode.HALF_UP);
     }
     
     @Override
