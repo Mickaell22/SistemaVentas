@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.math.BigDecimal;
 import java.util.List;
 
 public class VentaPanel extends JPanel {
@@ -102,14 +103,14 @@ public class VentaPanel extends JPanel {
         btnVentasPendientes.setBackground(new Color(255, 193, 7));
         btnVentasPendientes.setForeground(Color.BLACK);
         btnVentasPendientes.setPreferredSize(new Dimension(150, 40));
-        btnVentasPendientes.addActionListener(e -> controller.mostrarVentasPendientes());
+        btnVentasPendientes.addActionListener(e -> filtrarVentasPendientes());
         
         JButton btnVentasDelDia = new JButton("📅 Ventas del Día");
         btnVentasDelDia.setFont(new Font("Arial", Font.PLAIN, 12));
         btnVentasDelDia.setBackground(new Color(23, 162, 184));
         btnVentasDelDia.setForeground(Color.WHITE);
         btnVentasDelDia.setPreferredSize(new Dimension(150, 40));
-        btnVentasDelDia.addActionListener(e -> controller.mostrarVentasDelDia());
+        btnVentasDelDia.addActionListener(e -> mostrarVentasDelDia());
         
         buttonPanel.add(btnNuevaVenta);
         buttonPanel.add(btnVentasPendientes);
@@ -198,10 +199,11 @@ public class VentaPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1;
         filterPanel.add(new JLabel("Estado:"), gbc);
         gbc.gridx = 1;
-        JComboBox<String> cmbEstado = new JComboBox<>(controller.getEstadosVenta());
+        String[] estados = {"Todos", "PENDIENTE", "COMPLETADA", "CANCELADA"};
+        JComboBox<String> cmbEstado = new JComboBox<>(estados);
         cmbEstado.addActionListener(e -> {
             String estado = (String) cmbEstado.getSelectedItem();
-            controller.filtrarPorEstado(estado);
+            filtrarPorEstado(estado);
         });
         filterPanel.add(cmbEstado, gbc);
         
@@ -283,19 +285,19 @@ public class VentaPanel extends JPanel {
         quickActionsPanel.setBorder(BorderFactory.createTitledBorder("Acciones Rápidas"));
         
         JButton btnVentasHoy = new JButton("📅 Ventas de Hoy");
-        btnVentasHoy.addActionListener(e -> controller.mostrarVentasDelDia());
+        btnVentasHoy.addActionListener(e -> mostrarVentasDelDia());
         
         JButton btnUltimasVentas = new JButton("🕒 Últimas 20 Ventas");
-        btnUltimasVentas.addActionListener(e -> controller.mostrarUltimasVentas());
+        btnUltimasVentas.addActionListener(e -> mostrarUltimasVentas());
         
         JButton btnVentasPendientes = new JButton("⏳ Pendientes");
-        btnVentasPendientes.addActionListener(e -> controller.mostrarVentasPendientes());
+        btnVentasPendientes.addActionListener(e -> filtrarVentasPendientes());
         
         JButton btnReporte = new JButton("📊 Generar Reporte");
-        btnReporte.addActionListener(e -> controller.generarReporteVentas());
+        btnReporte.addActionListener(e -> generarReporteVentas());
         
         JButton btnExportar = new JButton("💾 Exportar CSV");
-        btnExportar.addActionListener(e -> controller.exportarVentasCSV());
+        btnExportar.addActionListener(e -> exportarVentasCSV());
         
         quickActionsPanel.add(btnVentasHoy);
         quickActionsPanel.add(btnUltimasVentas);
@@ -362,7 +364,7 @@ public class VentaPanel extends JPanel {
                         venta.getFechaVenta().toLocalDate().toString() : "";
                     data[i][3] = venta.getClienteNombre() != null ? 
                         venta.getClienteNombre() : "Cliente no especificado";
-                    data[i][4] = controller.formatearMonto(venta.getTotal());
+                    data[i][4] = formatearMonto(venta.getTotal());
                     data[i][5] = formatearEstado(venta.getEstado());
                 }
                 
@@ -406,8 +408,17 @@ public class VentaPanel extends JPanel {
     private void editarVentaSeleccionada() {
         int selectedRow = tablaVentas.getSelectedRow();
         if (selectedRow >= 0) {
-            int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
-            controller.mostrarFormularioEditarVenta(ventaId);
+            try {
+                int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
+                // CAMBIO: Llamar método que existe en el controller
+                controller.mostrarFormularioNuevaVenta(); // Por ahora usar este
+                JOptionPane.showMessageDialog(this, 
+                    "Funcionalidad de editar venta en desarrollo.\nID de venta: " + ventaId, 
+                    "En desarrollo", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                mostrarError("Error al editar venta: " + e.getMessage());
+            }
         } else {
             JOptionPane.showMessageDialog(this, 
                 "Por favor seleccione una venta para editar", 
@@ -419,8 +430,24 @@ public class VentaPanel extends JPanel {
     private void completarVentaSeleccionada() {
         int selectedRow = tablaVentas.getSelectedRow();
         if (selectedRow >= 0) {
-            int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
-            controller.completarVenta(ventaId);
+            try {
+                int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
+                // CAMBIO: Implementar lógica simple
+                int confirm = JOptionPane.showConfirmDialog(this, 
+                    "¿Confirma que desea completar esta venta?", 
+                    "Confirmar Completar", 
+                    JOptionPane.YES_NO_OPTION);
+                
+                if (confirm == JOptionPane.YES_OPTION) {
+                    // TODO: Implementar en controller
+                    JOptionPane.showMessageDialog(this, 
+                        "Funcionalidad en desarrollo.\nVenta ID: " + ventaId, 
+                        "En desarrollo", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
+                mostrarError("Error al completar venta: " + e.getMessage());
+            }
         } else {
             JOptionPane.showMessageDialog(this, 
                 "Por favor seleccione una venta para completar", 
@@ -432,8 +459,23 @@ public class VentaPanel extends JPanel {
     private void cancelarVentaSeleccionada() {
         int selectedRow = tablaVentas.getSelectedRow();
         if (selectedRow >= 0) {
-            int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
-            controller.cancelarVenta(ventaId);
+            try {
+                int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
+                int confirm = JOptionPane.showConfirmDialog(this, 
+                    "¿Confirma que desea cancelar esta venta?", 
+                    "Confirmar Cancelar", 
+                    JOptionPane.YES_NO_OPTION);
+                
+                if (confirm == JOptionPane.YES_OPTION) {
+                    // TODO: Implementar en controller
+                    JOptionPane.showMessageDialog(this, 
+                        "Funcionalidad en desarrollo.\nVenta ID: " + ventaId, 
+                        "En desarrollo", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
+                mostrarError("Error al cancelar venta: " + e.getMessage());
+            }
         } else {
             JOptionPane.showMessageDialog(this, 
                 "Por favor seleccione una venta para cancelar", 
@@ -445,8 +487,16 @@ public class VentaPanel extends JPanel {
     private void imprimirVentaSeleccionada() {
         int selectedRow = tablaVentas.getSelectedRow();
         if (selectedRow >= 0) {
-            int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
-            controller.imprimirFactura(ventaId);
+            try {
+                int ventaId = (Integer) tablaVentas.getValueAt(selectedRow, 0);
+                // TODO: Implementar impresión
+                JOptionPane.showMessageDialog(this, 
+                    "Funcionalidad de impresión en desarrollo.\nVenta ID: " + ventaId, 
+                    "En desarrollo", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                mostrarError("Error al imprimir venta: " + e.getMessage());
+            }
         } else {
             JOptionPane.showMessageDialog(this, 
                 "Por favor seleccione una venta para imprimir", 
@@ -455,7 +505,64 @@ public class VentaPanel extends JPanel {
         }
     }
     
+    // ===== MÉTODOS DE FILTROS IMPLEMENTADOS =====
+    
+    private void filtrarPorEstado(String estado) {
+        if ("Todos".equals(estado)) {
+            controller.cargarDatos();
+        } else {
+            // TODO: Implementar filtro en controller
+            JOptionPane.showMessageDialog(this, 
+                "Filtro por estado: " + estado + "\n(En desarrollo)", 
+                "Filtro", 
+                JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
+    private void filtrarVentasPendientes() {
+        // TODO: Implementar en controller
+        JOptionPane.showMessageDialog(this, 
+            "Mostrando ventas pendientes...\n(En desarrollo)", 
+            "Ventas Pendientes", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void mostrarVentasDelDia() {
+        // TODO: Implementar en controller
+        JOptionPane.showMessageDialog(this, 
+            "Mostrando ventas del día...\n(En desarrollo)", 
+            "Ventas del Día", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void mostrarUltimasVentas() {
+        controller.cargarDatos(); // Por ahora mostrar todas
+    }
+    
+    private void generarReporteVentas() {
+        // TODO: Implementar reportes
+        JOptionPane.showMessageDialog(this, 
+            "Generando reporte de ventas...\n(En desarrollo)", 
+            "Generar Reporte", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void exportarVentasCSV() {
+        // TODO: Implementar exportación
+        JOptionPane.showMessageDialog(this, 
+            "Exportando a CSV...\n(En desarrollo)", 
+            "Exportar CSV", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
     // ===== MÉTODOS AUXILIARES =====
+    
+    private String formatearMonto(BigDecimal monto) {
+        if (monto == null) {
+            return "$0.00";
+        }
+        return String.format("$%.2f", monto);
+    }
     
     private String formatearEstado(String estado) {
         if (estado == null) return "DESCONOCIDO";
@@ -466,6 +573,13 @@ public class VentaPanel extends JPanel {
             case "CANCELADA": return "❌ CANCELADA";
             default: return estado;
         }
+    }
+    
+    private void mostrarError(String mensaje) {
+        JOptionPane.showMessageDialog(this, 
+            mensaje, 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE);
     }
     
     private class VentaTableCellRenderer extends DefaultTableCellRenderer {

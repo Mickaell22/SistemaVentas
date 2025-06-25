@@ -3,6 +3,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestConIDsReales",
+            "request": "launch",
+            "mainClass": "Test.TestConIDsReales",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestDetalleVenta",
+            "request": "launch",
+            "mainClass": "Test.TestDetalleVenta",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
             "name": "TestClienteComplete",
             "request": "launch",
             "mainClass": "Test.TestClienteComplete",

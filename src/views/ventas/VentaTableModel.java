@@ -3,9 +3,11 @@ package views.ventas;
 import models.Venta;
 import javax.swing.table.AbstractTableModel;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VentaTableModel extends AbstractTableModel {
     
@@ -191,15 +193,7 @@ public class VentaTableModel extends AbstractTableModel {
     /**
      * Filtra ventas por estado
      */
-    public List<Venta> getVentasPorEstado(String estado) {
-        List<Venta> filtradas = new ArrayList<>();
-        for (Venta venta : ventas) {
-            if (estado.equals(venta.getEstado())) {
-                filtradas.add(venta);
-            }
-        }
-        return filtradas;
-    }
+    
     
     /**
      * Filtra ventas por método de pago
@@ -302,9 +296,13 @@ public class VentaTableModel extends AbstractTableModel {
      * Obtiene el número de ventas por estado
      */
     public int getVentasPorEstado(String estado) {
-        return (int) ventas.stream()
-                .filter(v -> estado.equals(v.getEstado()))
-                .count();
+        int count = 0;
+        for (Venta venta : ventas) {
+            if (estado.equals(venta.getEstado())) {
+                count++;
+            }
+        }
+        return count;
     }
     
     /**
@@ -332,41 +330,53 @@ public class VentaTableModel extends AbstractTableModel {
      * Calcula el total de todas las ventas completadas
      */
     public BigDecimal getTotalVentasCompletadas() {
-        return ventas.stream()
-                .filter(v -> "COMPLETADA".equals(v.getEstado()))
-                .map(Venta::getTotal)
-                .filter(total -> total != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = BigDecimal.ZERO;
+        for (Venta venta : ventas) {
+            if ("COMPLETADA".equals(venta.getEstado()) && venta.getTotal() != null) {
+                total = total.add(venta.getTotal());
+            }
+        }
+        return total;
     }
     
     /**
      * Calcula el promedio de ventas completadas
      */
     public BigDecimal getPromedioVentasCompletadas() {
-        List<Venta> completadas = ventas.stream()
-                .filter(v -> "COMPLETADA".equals(v.getEstado()))
-                .filter(v -> v.getTotal() != null)
-                .toList();
+        List<Venta> completadas = new ArrayList<>();
+        for (Venta venta : ventas) {
+            if ("COMPLETADA".equals(venta.getEstado()) && venta.getTotal() != null) {
+                completadas.add(venta);
+            }
+        }
         
         if (completadas.isEmpty()) {
             return BigDecimal.ZERO;
         }
         
-        BigDecimal total = completadas.stream()
-                .map(Venta::getTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = BigDecimal.ZERO;
+        for (Venta venta : completadas) {
+            total = total.add(venta.getTotal());
+        }
         
-        return total.divide(new BigDecimal(completadas.size()), 2, BigDecimal.ROUND_HALF_UP);
+        return total.divide(new BigDecimal(completadas.size()), 2, RoundingMode.HALF_UP);
     }
     
     /**
      * Obtiene la venta con mayor total
      */
     public Venta getVentaConMayorTotal() {
-        return ventas.stream()
-                .filter(v -> v.getTotal() != null)
-                .max((v1, v2) -> v1.getTotal().compareTo(v2.getTotal()))
-                .orElse(null);
+        Venta ventaMayor = null;
+        BigDecimal mayorTotal = BigDecimal.ZERO;
+        
+        for (Venta venta : ventas) {
+            if (venta.getTotal() != null && venta.getTotal().compareTo(mayorTotal) > 0) {
+                mayorTotal = venta.getTotal();
+                ventaMayor = venta;
+            }
+        }
+        
+        return ventaMayor;
     }
     
     /**
@@ -549,6 +559,7 @@ public class VentaTableModel extends AbstractTableModel {
             case "EFECTIVO": return "Efectivo";
             case "TARJETA": return "Tarjeta";
             case "TRANSFERENCIA": return "Transferencia";
+            case "CREDITO": return "Crédito";
             default: return metodoDB;
         }
     }
@@ -598,20 +609,31 @@ public class VentaTableModel extends AbstractTableModel {
      * Obtiene las ventas del día actual
      */
     public List<Venta> getVentasDeHoy() {
-        return ventas.stream()
-                .filter(v -> v.getFechaVenta() != null && 
-                           v.getFechaVenta().toLocalDate().equals(java.time.LocalDate.now()))
-                .toList();
+        List<Venta> ventasHoy = new ArrayList<>();
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        
+        for (Venta venta : ventas) {
+            if (venta.getFechaVenta() != null && 
+                venta.getFechaVenta().toLocalDate().equals(hoy)) {
+                ventasHoy.add(venta);
+            }
+        }
+        return ventasHoy;
     }
     
     /**
      * Obtiene las ventas de los últimos N días
      */
     public List<Venta> getVentasUltimosDias(int dias) {
+        List<Venta> ventasRecientes = new ArrayList<>();
         java.time.LocalDate fechaLimite = java.time.LocalDate.now().minusDays(dias);
-        return ventas.stream()
-                .filter(v -> v.getFechaVenta() != null && 
-                           v.getFechaVenta().toLocalDate().isAfter(fechaLimite))
-                .toList();
+        
+        for (Venta venta : ventas) {
+            if (venta.getFechaVenta() != null && 
+                venta.getFechaVenta().toLocalDate().isAfter(fechaLimite)) {
+                ventasRecientes.add(venta);
+            }
+        }
+        return ventasRecientes;
     }
 }
