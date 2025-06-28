@@ -30,6 +30,10 @@ public class MainFrame extends JFrame {
     private JLabel lblStatusTime;
     private Timer statusTimer;
     private JPanel currentPanel;
+    private UsuarioPanel usuarioPanel;
+    private JMenuItem menuUsuarios;
+    private JButton btnUsuarios;
+    private JPanel panelUsuarioInfo;
 
     public MainFrame() {
         this.authService = AuthService.getInstance();
@@ -42,13 +46,14 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        initializeComponents();
-        setupLayout();
-        setupMenus();
-        setupToolBar();
-        setupStatusBar();
-        setupWindow();
-        setupTimer();
+        initializeComponents(); // 1. Primero los componentes básicos
+        createUserInfoPanel(); // 2. Crear UserInfoPanel
+        setupLayout(); // 3. Layout del contenido principal
+        setupMenus(); // 4. Menús
+        setupToolBar(); // 5. Toolbar
+        setupStatusBar(); // 6. Barra de estado (usa UserInfoPanel)
+        setupWindow(); // 7. Configuración de ventana
+        setupTimer(); // 8. Timer al final
     }
 
     private void initializeComponents() {
@@ -61,6 +66,78 @@ public class MainFrame extends JFrame {
         lblStatusTime = new JLabel();
 
         updateUserInfo();
+    }
+
+    private void createUserInfoPanel() {
+        panelUsuarioInfo = new JPanel(new BorderLayout());
+        panelUsuarioInfo.setBackground(new Color(240, 248, 255));
+        panelUsuarioInfo.setBorder(BorderFactory.createLoweredBevelBorder());
+        panelUsuarioInfo.setPreferredSize(new Dimension(0, 30));
+
+        try {
+            // Información del usuario
+            Usuario currentUser = authService.getCurrentUser();
+            if (currentUser != null) {
+                String infoText = "👤 " + currentUser.getNombreCompleto() +
+                        " | 🎭 " + currentUser.getRolNombre() +
+                        " | ⏰ Sesión activa";
+
+                JLabel lblUsuario = new JLabel("  " + infoText);
+                lblUsuario.setFont(new Font("Arial", Font.BOLD, 11));
+
+                // Botones
+                JButton btnPerfil = new JButton("👤 Perfil");
+                btnPerfil.setPreferredSize(new Dimension(80, 25));
+                btnPerfil.addActionListener(e -> mostrarPerfilSimple());
+
+                JButton btnLogout = new JButton("🚪 Salir");
+                btnLogout.setPreferredSize(new Dimension(70, 25));
+                btnLogout.addActionListener(e -> logout());
+
+                // Layout
+                JPanel panelDerecho = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 2));
+                panelDerecho.setBackground(new Color(240, 248, 255));
+                panelDerecho.add(btnPerfil);
+                panelDerecho.add(btnLogout);
+
+                panelUsuarioInfo.add(lblUsuario, BorderLayout.WEST);
+                panelUsuarioInfo.add(panelDerecho, BorderLayout.EAST);
+            } else {
+                JLabel lblError = new JLabel("  ❌ Usuario no disponible");
+                panelUsuarioInfo.add(lblError, BorderLayout.CENTER);
+            }
+
+            System.out.println("✅ Panel de usuario creado exitosamente");
+
+        } catch (Exception e) {
+            System.err.println("❌ Error al crear panel de usuario: " + e.getMessage());
+            JLabel lblError = new JLabel("  ⚠️ Error en panel de usuario");
+            panelUsuarioInfo.add(lblError, BorderLayout.CENTER);
+        }
+    }
+
+    private void mostrarPerfilSimple() {
+        try {
+            Usuario currentUser = authService.getCurrentUser();
+            if (currentUser == null) {
+                JOptionPane.showMessageDialog(this, "No hay usuario logueado", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String mensaje = "INFORMACIÓN DEL USUARIO\n\n" +
+                    "Nombre: " + currentUser.getNombreCompleto() + "\n" +
+                    "Username: " + currentUser.getUsername() + "\n" +
+                    "Email: " + currentUser.getEmail() + "\n" +
+                    "Rol: " + currentUser.getRolNombre() + "\n" +
+                    "Estado: " + (currentUser.isActivo() ? "✅ Activo" : "❌ Inactivo") + "\n" +
+                    "ID: " + currentUser.getId();
+
+            JOptionPane.showMessageDialog(this, mensaje, "Mi Perfil", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al mostrar perfil: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void setupLayout() {
@@ -299,6 +376,14 @@ public class MainFrame extends JFrame {
         btnClientes.addActionListener(e -> openClientes());
         toolBar.add(btnClientes);
 
+        // ✅ AGREGAR BOTÓN USUARIOS SI TIENE PERMISOS
+        if (authService.canManageUsers()) {
+            JButton btnUsuarios = new JButton("Usuarios");
+            btnUsuarios.setIcon(createIcon("👥"));
+            btnUsuarios.addActionListener(e -> openUsuarios());
+            toolBar.add(btnUsuarios);
+        }
+
         if (authService.canViewReports()) {
             toolBar.addSeparator();
             JButton btnReportes = new JButton("Reportes");
@@ -328,14 +413,22 @@ public class MainFrame extends JFrame {
             }
 
             @Override
-            public int getIconWidth() { return 20; }
+            public int getIconWidth() {
+                return 20;
+            }
 
             @Override
-            public int getIconHeight() { return 20; }
+            public int getIconHeight() {
+                return 20;
+            }
         };
     }
 
     private void setupStatusBar() {
+        // Crear panel contenedor para ambas barras de estado
+        JPanel statusContainer = new JPanel(new BorderLayout());
+
+        // Barra de estado original (fecha/hora)
         JPanel statusPanel = new JPanel(new BorderLayout());
         statusPanel.setBorder(BorderFactory.createLoweredBevelBorder());
         statusPanel.setBackground(new Color(248, 249, 250));
@@ -353,7 +446,17 @@ public class MainFrame extends JFrame {
         statusPanel.add(leftPanel, BorderLayout.WEST);
         statusPanel.add(rightPanel, BorderLayout.EAST);
 
-        add(statusPanel, BorderLayout.SOUTH);
+        // ✅ VERIFICAR QUE EL PANEL NO SEA NULL Y USAR EL NUEVO NOMBRE
+        if (panelUsuarioInfo != null) {
+            statusContainer.add(panelUsuarioInfo, BorderLayout.NORTH); // Panel de usuario arriba
+            System.out.println("✅ Panel de usuario agregado a la interfaz");
+        } else {
+            System.err.println("⚠️ panelUsuarioInfo es null, saltando...");
+        }
+
+        statusContainer.add(statusPanel, BorderLayout.SOUTH); // Panel de fecha/hora abajo
+
+        add(statusContainer, BorderLayout.SOUTH);
     }
 
     private void setupWindow() {
@@ -388,8 +491,8 @@ public class MainFrame extends JFrame {
     private void updateUserInfo() {
         Usuario currentUser = authService.getCurrentUser();
         if (currentUser != null) {
-            lblStatusUser.setText("Usuario: " + currentUser.getNombreCompleto() + 
-                                " | Rol: " + currentUser.getRolNombre());
+            lblStatusUser.setText("Usuario: " + currentUser.getNombreCompleto() +
+                    " | Rol: " + currentUser.getRolNombre());
         }
     }
 
@@ -417,10 +520,10 @@ public class MainFrame extends JFrame {
             VentaController ventaController = new VentaController();
             ventaController.mostrarFormularioNuevaVenta();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error al abrir nueva venta: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error al abrir nueva venta: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -446,21 +549,62 @@ public class MainFrame extends JFrame {
         cambiarPanel(new ClientePanel(), "Gestión de Clientes");
     }
 
-    // Módulo de Usuarios
+    // ✅ COMPLETAR EL MÉTODO DE USUARIOS
     private void openUsuarios() {
-        // cambiarPanel(new UsuarioPanel(), "Gestión de Usuarios");
+        try {
+            // Verificar permisos
+            if (!authService.canManageUsers()) {
+                JOptionPane.showMessageDialog(this,
+                        "No tiene permisos para gestionar usuarios",
+                        "Acceso Denegado",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Crear el panel si no existe
+            if (usuarioPanel == null) {
+                usuarioPanel = new UsuarioPanel();
+            }
+
+            // Cambiar al panel de usuarios
+            cambiarPanel(usuarioPanel, "Gestión de Usuarios");
+
+            System.out.println("✅ Panel de usuarios mostrado");
+
+        } catch (Exception e) {
+            System.err.println("Error al mostrar panel de usuarios: " + e.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar módulo de usuarios: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void openRoles() {
-        UsuarioPanel usuarioPanel = new UsuarioPanel();
-        // cambiarPanel(usuarioPanel, "Roles y Permisos");
-        // // Enfocar en la pestaña de roles
-        // SwingUtilities.invokeLater(() -> {
-        //     if (usuarioPanel.getComponentCount() > 0 && usuarioPanel.getComponent(1) instanceof JTabbedPane) {
-        //         JTabbedPane tabbedPane = (JTabbedPane) usuarioPanel.getComponent(1);
-        //         tabbedPane.setSelectedIndex(2); // Pestaña "Roles y Permisos"
-        //     }
-        // });
+        try {
+            // Verificar permisos
+            if (!authService.canManageUsers()) {
+                JOptionPane.showMessageDialog(this,
+                        "No tiene permisos para gestionar roles",
+                        "Acceso Denegado",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Por ahora usar el mismo panel de usuarios
+            // En el futuro se puede crear un panel específico para roles
+            if (usuarioPanel == null) {
+                usuarioPanel = new UsuarioPanel();
+            }
+
+            cambiarPanel(usuarioPanel, "Roles y Permisos");
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar módulo de roles: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // Módulo de Reportes
@@ -519,10 +663,36 @@ public class MainFrame extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (option == JOptionPane.YES_OPTION) {
-            statusTimer.stop();
+            // ✅ HACER LOGOUT COMPLETO
+            realizarLogout();
+        }
+    }
+
+    public void realizarLogout() {
+        try {
+            // Detener timer de estado
+            if (statusTimer != null) {
+                statusTimer.stop();
+            }
+
+            // ✅ CAMBIAR ESTA PARTE - YA NO HAY MÉTODO detenerMonitoreo()
+            // Solo limpiamos el panel
+            if (panelUsuarioInfo != null) {
+                panelUsuarioInfo.removeAll();
+                panelUsuarioInfo = null;
+            }
+
+            // Cerrar sesión
             authService.logout();
+
+            // Cerrar ventana actual
             dispose();
+
+            // Mostrar ventana de login
             new LoginController();
+
+        } catch (Exception e) {
+            System.err.println("Error durante logout: " + e.getMessage());
         }
     }
 
@@ -534,7 +704,17 @@ public class MainFrame extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (option == JOptionPane.YES_OPTION) {
-            statusTimer.stop();
+            // Detener timer
+            if (statusTimer != null) {
+                statusTimer.stop();
+            }
+            
+            if (panelUsuarioInfo != null) {
+                panelUsuarioInfo.removeAll();
+                panelUsuarioInfo = null;
+            }
+
+            // Cerrar sesión y salir
             authService.logout();
             System.exit(0);
         }
@@ -573,10 +753,10 @@ public class MainFrame extends JFrame {
         JTextArea textArea = new JTextArea(message);
         textArea.setEditable(false);
         textArea.setFont(new Font("Arial", Font.PLAIN, 12));
-        
+
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(500, 600));
-        
+
         JOptionPane.showMessageDialog(this, scrollPane, "Acerca del Sistema", JOptionPane.INFORMATION_MESSAGE);
     }
 }

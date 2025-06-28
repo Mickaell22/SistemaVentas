@@ -3,13 +3,17 @@ package services;
 import dao.impl.UsuarioDAOImpl;
 import dao.interfaces.IUsuarioDAO;
 import models.Usuario;
+import models.AuditoriaUsuario;
 import utils.SessionManager;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class AuthService {
     
     private IUsuarioDAO usuarioDAO;
     private static AuthService instance;
+    private final int MAX_INTENTOS_FALLIDOS = 5;
+    private final int MINUTOS_BLOQUEO = 30;
     
     private AuthService() {
         this.usuarioDAO = new UsuarioDAOImpl();
@@ -30,39 +34,55 @@ public class AuthService {
             // Validar entrada
             if (username == null || username.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
+                registrarIntentoLogin(username, false, "Credenciales vacías");
+                return false;
+            }
+            
+            // Obtener usuario
+            Optional<Usuario> usuarioOpt = usuarioDAO.obtenerPorUsername(username.trim());
+            
+            if (!usuarioOpt.isPresent()) {
+                registrarIntentoLogin(username, false, "Usuario no encontrado");
+                return false;
+            }
+            
+            Usuario usuario = usuarioOpt.get();
+            
+            // Verificar si está bloqueado
+            if (usuario.isBlocked()) {
+                registrarIntentoLogin(username, false, "Usuario bloqueado");
+                return false;
+            }
+            
+            // Verificar si está activo
+            if (!usuario.isActivo()) {
+                registrarIntentoLogin(username, false, "Usuario inactivo");
                 return false;
             }
             
             // Verificar credenciales
             if (usuarioDAO.autenticar(username.trim(), password)) {
-                // Obtener datos completos del usuario
-                Optional<Usuario> usuarioOpt = usuarioDAO.obtenerPorUsername(username.trim());
+                // Login exitoso
+                establecerSesion(usuario);
+                actualizarUltimoLogin(usuario.getId());
+                registrarIntentoLogin(username, true, "Login exitoso");
                 
-                if (usuarioOpt.isPresent()) {
-                    Usuario usuario = usuarioOpt.get();
-                    
-                    // Verificar que el usuario esté activo
-                    if (!usuario.isActivo()) {
-                        System.out.println("Usuario inactivo: " + username);
-                        return false;
-                    }
-                    
-                    // Establecer sesión
-                    SessionManager.getInstance().setCurrentUser(usuario);
-                    
-                    // Actualizar último login
-                    usuarioDAO.actualizarUltimoLogin(usuario.getId());
-                    
-                    System.out.println("Login exitoso para: " + usuario.getNombreCompleto());
-                    return true;
+                // Verificar si necesita cambiar contraseña
+                if (usuario.isPasswordExpired()) {
+                    SessionManager.getInstance().setRequieresCambioPassword(true);
                 }
+                
+                System.out.println("Login exitoso para: " + usuario.getNombreCompleto());
+                return true;
+            } else {
+                // Login fallido
+                registrarIntentoLogin(username, false, "Contraseña incorrecta");
+                return false;
             }
-            
-            System.out.println("Credenciales inválidas para: " + username);
-            return false;
             
         } catch (Exception e) {
             System.err.println("Error durante el login: " + e.getMessage());
+            registrarIntentoLogin(username, false, "Error del sistema: " + e.getMessage());
             return false;
         }
     }
@@ -73,6 +93,7 @@ public class AuthService {
     public void logout() {
         Usuario currentUser = SessionManager.getInstance().getCurrentUser();
         if (currentUser != null) {
+            registrarAuditoria(currentUser.getId(), "LOGOUT", "Sesión cerrada", "SISTEMA");
             System.out.println("Logout para: " + currentUser.getNombreCompleto());
             SessionManager.getInstance().clearSession();
         }
@@ -82,7 +103,13 @@ public class AuthService {
      * Verifica si hay una sesión activa
      */
     public boolean isAuthenticated() {
-        return SessionManager.getInstance().getCurrentUser() != null;
+        Usuario currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            return false;
+        }
+        
+        // Verificar si la sesión no ha expirado
+        return !SessionManager.getInstance().isSessionExpired();
     }
     
     /**
@@ -91,6 +118,74 @@ public class AuthService {
     public Usuario getCurrentUser() {
         return SessionManager.getInstance().getCurrentUser();
     }
+    
+    /**
+     * Establece la sesión del usuario
+     */
+    private void establecerSesion(Usuario usuario) {
+        SessionManager sessionManager = SessionManager.getInstance();
+        sessionManager.setCurrentUser(usuario);
+        sessionManager.setSessionStartTime(LocalDateTime.now());
+        sessionManager.setLastActivity(LocalDateTime.now());
+        
+        // Registrar auditoría
+        registrarAuditoria(usuario.getId(), "LOGIN", "Sesión iniciada", "SISTEMA");
+    }
+    
+    /**
+     * Actualiza el último login del usuario
+     */
+    private void actualizarUltimoLogin(int usuarioId) {
+        try {
+            usuarioDAO.actualizarUltimoLogin(usuarioId);
+        } catch (Exception e) {
+            System.err.println("Error al actualizar último login: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Registra intento de login en auditoría
+     */
+    private void registrarIntentoLogin(String username, boolean exitoso, String descripcion) {
+        try {
+            // Para intentos fallidos, usar ID 0 si no se encuentra el usuario
+            int usuarioId = 0;
+            Optional<Usuario> usuarioOpt = usuarioDAO.obtenerPorUsername(username);
+            if (usuarioOpt.isPresent()) {
+                usuarioId = usuarioOpt.get().getId();
+            }
+            
+            String accion = exitoso ? "LOGIN_EXITOSO" : "LOGIN_FALLIDO";
+            String descripcionCompleta = String.format("Usuario: %s - %s", username, descripcion);
+            
+            AuditoriaUsuario auditoria = new AuditoriaUsuario(
+                usuarioId, accion, descripcionCompleta, 
+                SessionManager.getInstance().getIpAddress(), "AUTENTICACION"
+            );
+            
+            usuarioDAO.registrarAuditoria(auditoria);
+            
+        } catch (Exception e) {
+            System.err.println("Error al registrar intento de login: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Registra una auditoría general
+     */
+    private void registrarAuditoria(int usuarioId, String accion, String descripcion, String modulo) {
+        try {
+            AuditoriaUsuario auditoria = new AuditoriaUsuario(
+                usuarioId, accion, descripcion, 
+                SessionManager.getInstance().getIpAddress(), modulo
+            );
+            usuarioDAO.registrarAuditoria(auditoria);
+        } catch (Exception e) {
+            System.err.println("Error al registrar auditoría: " + e.getMessage());
+        }
+    }
+    
+    // ===== VERIFICACIONES DE ROLES Y PERMISOS =====
     
     /**
      * Verifica si el usuario actual tiene un rol específico
@@ -128,6 +223,8 @@ public class AuthService {
         return hasRole("CAJERO");
     }
     
+    // ===== PERMISOS GRANULARES =====
+    
     /**
      * Verifica si el usuario puede gestionar usuarios
      */
@@ -154,5 +251,80 @@ public class AuthService {
      */
     public boolean canMakeSales() {
         return isAdmin() || isGerente() || isVendedor() || isCajero();
+    }
+    
+    /**
+     * Verifica si el usuario puede gestionar clientes
+     */
+    public boolean canManageClients() {
+        return isAdmin() || isGerente() || isVendedor();
+    }
+    
+    /**
+     * Verifica si el usuario puede ver solo sus propias ventas
+     */
+    public boolean canViewOwnSalesOnly() {
+        return isCajero() || isVendedor();
+    }
+    
+    /**
+     * Verifica si el usuario puede ver todas las ventas
+     */
+    public boolean canViewAllSales() {
+        return isAdmin() || isGerente();
+    }
+    
+    /**
+     * Verifica si el usuario puede gestionar configuración del sistema
+     */
+    public boolean canManageSystemConfig() {
+        return isAdmin();
+    }
+    
+    /**
+     * Verifica si el usuario puede acceder a auditoría
+     */
+    public boolean canViewAudit() {
+        return isAdmin() || isGerente();
+    }
+    
+    // ===== UTILIDADES DE SESIÓN =====
+    
+    /**
+     * Actualiza la actividad de la sesión
+     */
+    public void updateSessionActivity() {
+        if (isAuthenticated()) {
+            SessionManager.getInstance().setLastActivity(LocalDateTime.now());
+        }
+    }
+    
+    /**
+     * Verifica si la sesión está por expirar
+     */
+    public boolean isSessionNearExpiry() {
+        return SessionManager.getInstance().isSessionNearExpiry();
+    }
+    
+    /**
+     * Extiende la sesión actual
+     */
+    public void extendSession() {
+        if (isAuthenticated()) {
+            SessionManager.getInstance().extendSession();
+            Usuario currentUser = getCurrentUser();
+            registrarAuditoria(currentUser.getId(), "EXTEND_SESSION", "Sesión extendida", "SISTEMA");
+        }
+    }
+    
+    /**
+     * Fuerza el cierre de sesión por seguridad
+     */
+    public void forceLogout(String motivo) {
+        Usuario currentUser = getCurrentUser();
+        if (currentUser != null) {
+            registrarAuditoria(currentUser.getId(), "FORCE_LOGOUT", "Cierre forzado: " + motivo, "SEGURIDAD");
+        }
+        logout();
     }
 }

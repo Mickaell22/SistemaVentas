@@ -3,6 +3,48 @@
     "configurations": [
         {
             "type": "java",
+            "name": "TestBasicoUsuarios",
+            "request": "launch",
+            "mainClass": "Test.TestBasicoUsuarios",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestUsuarioCompleto",
+            "request": "launch",
+            "mainClass": "Test.TestUsuarioCompleto",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestChangePasswords",
+            "request": "launch",
+            "mainClass": "Test.TestChangePasswords",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestBCryptComplete",
+            "request": "launch",
+            "mainClass": "Test.TestBCryptComplete",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestBCryptLibrary",
+            "request": "launch",
+            "mainClass": "Test.TestBCryptLibrary",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
+            "name": "TestBCrypt",
+            "request": "launch",
+            "mainClass": "Test.TestBCrypt",
+            "projectName": "SistemaVentas_b8c60605"
+        },
+        {
+            "type": "java",
             "name": "TestConIDsReales",
             "request": "launch",
             "mainClass": "Test.TestConIDsReales",
